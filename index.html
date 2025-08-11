@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>にゃんとも多忙！猫カフェ・ダッシュ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- タイトル画面 -->
+        <div id="title-screen" class="screen active">
+            <h1>にゃんとも多忙！<br>猫カフェ・ダッシュ</h1>
+            <button id="start-button">ゲームスタート</button>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="game-screen" class="screen">
+            <div id="left-panel">
+                <header id="game-header">
+                    <div>スコア: <span id="score">0</span></div>
+                    <div>時間: <span id="timer">60</span></div>
+                    <div>満足した猫: <span id="satisfied-cats">0</span></div>
+                </header>
+                <div id="cat-queue-container">
+                    <h2>猫たちのおねがい</h2>
+                    <div id="cat-queue">
+                        <!-- 猫のおねがいはここに動的に追加される -->
+                    </div>
+                </div>
+            </div>
+            <div id="puzzle-container">
+                <div id="puzzle-board"></div>
+            </div>
+        </div>
+
+        <!-- リザルト画面 -->
+        <div id="result-screen" class="screen">
+            <h2>ゲームオーバー</h2>
+            <p>最終スコア: <span id="final-score">0</span></p>
+            <p>満足した猫の数: <span id="final-satisfied-cats">0</span></p>
+            <button id="restart-button">もう一度遊ぶ</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
