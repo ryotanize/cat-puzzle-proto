@@ -34,6 +34,12 @@ const PANEL_COLORS = {
     'catnip': '#ffdfba',// パステルオレンジ
     'water': '#e0baff'  // パステルパープル
 };
+const DESKTOP_DIMS = { panel: 50, gap: 5, padding: 10 };
+const MOBILE_DIMS = { panel: 40, gap: 4, padding: 5 };
+
+function getDimensions() {
+    return window.innerWidth <= 768 ? MOBILE_DIMS : DESKTOP_DIMS;
+}
 
 // --- ゲームの状態管理用変数 ---
 let score = 0;
@@ -169,15 +175,24 @@ function initializeBoard() {
  */
 function renderBoard() {
     puzzleBoardEl.innerHTML = ''; // 盤面をクリア
+    const dims = getDimensions();
+    const totalPanelSize = dims.panel + dims.gap;
+
+    // CSSで設定したpaddingに合わせてオフセットを調整
+    const offset = dims.padding;
+
     for (let row = 0; row < BOARD_SIZE; row++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
             const panelType = board[row][col];
             if (panelType) {
                 const panel = document.createElement('div');
+                panel.id = `panel-${row}-${col}`;
                 panel.classList.add('panel');
                 panel.dataset.row = row;
                 panel.dataset.col = col;
                 panel.style.backgroundColor = PANEL_COLORS[panelType];
+                panel.style.left = `${col * totalPanelSize + offset}px`;
+                panel.style.top = `${row * totalPanelSize + offset}px`;
                 puzzleBoardEl.appendChild(panel);
             }
         }
@@ -332,24 +347,50 @@ function findAllMatches() {
 
 
 /**
- * マッチしたパネルを消去し、スコアを更新する
+ * マッチに基づいてスコアや猫のノルマを処理する
  * @param {Array} matches マッチしたパネルのグループの配列
  * @param {number} chainCount 連鎖回数
- * @returns {Array} 消去されたパネルの種類の配列
  */
-function clearMatches(matches, chainCount) {
+function processMatches(matches, chainCount) {
     const clearedPanelTypes = [];
     matches.forEach(match => {
         match.forEach(panel => {
             const panelType = board[panel.row][panel.col];
             if(panelType) {
                 clearedPanelTypes.push(panelType);
-                board[panel.row][panel.col] = null;
             }
         });
         updateScore(match.length, chainCount);
     });
-    return clearedPanelTypes;
+    updateCatRequests(clearedPanelTypes);
+}
+
+/**
+ * マッチしたパネルの消去アニメーションを再生し、データを削除する
+ * @param {Array} matches
+ */
+async function animateAndClear(matches) {
+    const panelsToClear = new Set();
+    matches.forEach(match => {
+        match.forEach(p => panelsToClear.add(document.getElementById(`panel-${p.row}-${p.col}`)));
+    });
+
+    panelsToClear.forEach(panelEl => {
+        if (panelEl) {
+            panelEl.classList.add('clearing');
+        }
+    });
+
+    await sleep(200); // アニメーション待機
+
+    panelsToClear.forEach(panelEl => {
+        if (panelEl) {
+            const row = parseInt(panelEl.dataset.row);
+            const col = parseInt(panelEl.dataset.col);
+            puzzleBoardEl.removeChild(panelEl);
+            board[row][col] = null;
+        }
+    });
 }
 
 /**
@@ -369,33 +410,86 @@ function updateScore(matchLength, chainCount) {
 }
 
 /**
- * 空白になったマスを埋める（パネルを落下させる）
+ * パネルの落下を計算し、アニメーションさせる
  */
-function dropPanels() {
+async function animateAndDropPanels() {
+    const dims = getDimensions();
+    const totalPanelSize = dims.panel + dims.gap;
+    const offset = dims.padding;
+    const moves = [];
+
     for (let c = 0; c < BOARD_SIZE; c++) {
-        let emptyRow = BOARD_SIZE - 1;
+        let fallDistance = 0;
         for (let r = BOARD_SIZE - 1; r >= 0; r--) {
-            if (board[r][c] !== null) {
-                if (emptyRow !== r) {
-                    swapPanels({row: r, col: c}, {row: emptyRow, col: c});
-                }
-                emptyRow--;
+            if (board[r][c] === null) {
+                fallDistance++;
+            } else if (fallDistance > 0) {
+                const panelEl = document.getElementById(`panel-${r}-${c}`);
+                const newRow = r + fallDistance;
+                panelEl.style.top = `${newRow * totalPanelSize + offset}px`;
+                panelEl.id = `panel-${newRow}-${c}`;
+                panelEl.dataset.row = newRow;
+                moves.push({ from: {r, c}, to: {r: newRow, c}, type: board[r][c] });
             }
         }
     }
+
+    if (moves.length === 0) return;
+
+    await sleep(300); // 落下アニメーション待機
+
+    // データ配列を更新
+    moves.forEach(move => {
+        board[move.to.r][move.to.c] = move.type;
+        board[move.from.r][move.from.c] = null;
+    });
 }
 
 /**
- * 盤面の上部から新しいパネルを補充する
+ * 新しいパネルを補充し、アニメーションさせる
  */
-function refillBoard() {
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
+async function animateAndRefillBoard() {
+    const dims = getDimensions();
+    const totalPanelSize = dims.panel + dims.gap;
+    const offset = dims.padding;
+    const newPanelElements = [];
+
+    for (let c = 0; c < BOARD_SIZE; c++) {
+        let addedCount = 0;
+        for (let r = BOARD_SIZE - 1; r >= 0; r--) {
             if (board[r][c] === null) {
-                board[r][c] = getRandomPanelType();
+                addedCount++;
+                const panelType = getRandomPanelType();
+                board[r][c] = panelType;
+
+                const panelEl = document.createElement('div');
+                panelEl.id = `panel-${r}-${c}`;
+                panelEl.classList.add('panel');
+                panelEl.dataset.row = r;
+                panelEl.dataset.col = c;
+                panelEl.style.backgroundColor = PANEL_COLORS[panelType];
+
+                const startTop = (-addedCount * totalPanelSize) + offset;
+                panelEl.style.left = `${c * totalPanelSize + offset}px`;
+                panelEl.style.top = `${startTop}px`;
+
+                puzzleBoardEl.appendChild(panelEl);
+                newPanelElements.push(panelEl);
             }
         }
     }
+
+    if (newPanelElements.length === 0) return;
+
+    await sleep(50); // DOMに要素が追加されるのを待つ
+
+    // 新しいパネルを正しい位置にアニメーションさせる
+    newPanelElements.forEach(panelEl => {
+        const r = parseInt(panelEl.dataset.row);
+        panelEl.style.top = `${r * totalPanelSize + offset}px`;
+    });
+
+    await sleep(300); // 補充アニメーション待機
 }
 
 /**
@@ -407,20 +501,15 @@ async function handleChainReaction(initialMatches) {
     let chainCount = 1;
 
     while (currentMatches.length > 0) {
-        const clearedPanelTypes = clearMatches(currentMatches, chainCount);
-        updateCatRequests(clearedPanelTypes);
-        await sleep(200);
-        renderBoard();
+        processMatches(currentMatches, chainCount);
 
-        await sleep(200);
-        dropPanels();
-        renderBoard();
+        await animateAndClear(currentMatches);
 
-        await sleep(200);
-        refillBoard();
-        renderBoard();
+        await animateAndDropPanels();
 
-        await sleep(200);
+        await animateAndRefillBoard();
+
+        await sleep(300);
         currentMatches = findAllMatches();
         if (currentMatches.length > 0) {
             chainCount++;

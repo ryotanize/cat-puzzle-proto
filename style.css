@@ -118,27 +118,33 @@ body {
 
 /* パズル盤面 */
 #puzzle-board {
-    display: grid;
-    grid-template-columns: repeat(8, 50px);
-    grid-template-rows: repeat(8, 50px);
-    gap: 4px;
+    position: relative; /* パネルを絶対配置するための基準 */
+    width: 440px;  /* (50px * 8) + (5px * 8) */
+    height: 440px; /* (50px * 8) + (5px * 8) */
     padding: 10px;
     background-color: #073642; /* ベースのダークブルー */
     border: 5px solid #586e75;
     border-radius: 8px;
-    width: fit-content;
+    box-sizing: content-box;
 }
 
 .panel {
+    position: absolute; /* 位置をJSで制御 */
     width: 50px;
     height: 50px;
     border-radius: 5px;
     cursor: pointer;
-    transition: transform 0.2s ease;
+    /* アニメーション用のトランジション */
+    transition: top 0.3s ease-out, left 0.3s ease-out, transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
 }
 .panel.selected {
     transform: scale(1.1);
     box-shadow: 0 0 10px 3px #ffff00; /* 黄色いハイライト */
+}
+
+.panel.clearing {
+    transform: scale(0);
+    opacity: 0;
 }
 
 /* リザルト画面 */
@@ -163,15 +169,13 @@ body {
         flex-direction: column; /* 縦並びにする */
     }
     #puzzle-board {
-        grid-template-columns: repeat(8, 10vw);
-        grid-template-rows: repeat(8, 10vw);
-        max-width: 380px; /* 画面に収まるように */
+        width: 352px;  /* (40px * 8) + (4px * 8) */
+        height: 352px; /* (40px * 8) + (4px * 8) */
+        padding: 5px;
     }
     .panel {
-        width: 10vw;
-        height: 10vw;
-        max-width: 45px;
-        max-height: 45px;
+        width: 40px;
+        height: 40px;
     }
     #left-panel {
         order: -1; /* パズルより上に表示 */
