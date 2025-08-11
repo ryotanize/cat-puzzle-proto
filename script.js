@@ -247,19 +247,22 @@ async function onPanelClick(e) {
  * @param {object} p2 {row, col}
  */
 async function swapAndCheck(p1, p2) {
+    puzzleBoardEl.classList.add('processing');
+
+    await animateSwap(p1, p2);
     swapPanels(p1, p2);
 
     const matches = findAllMatches();
     if (matches.length > 0) {
-        puzzleBoardEl.classList.add('processing');
         await handleChainReaction(matches);
-        puzzleBoardEl.classList.remove('processing');
     } else {
         // マッチしない場合は元に戻す
-        await sleep(100); // 視覚的に戻るのが分かるように少し待つ
-        swapPanels(p1, p2); // 再度スワップして元に戻す
-        renderBoard();
+        await sleep(100);
+        await animateSwap(p1, p2); // 見た目を元に戻す
+        swapPanels(p1, p2);      // データを元に戻す
     }
+
+    puzzleBoardEl.classList.remove('processing');
 }
 
 /**
@@ -496,6 +499,36 @@ async function animateAndRefillBoard() {
  * 連鎖処理のメインループ
  * @param {Array} initialMatches 最初のマッチ
  */
+async function animateSwap(p1, p2) {
+    const el1 = document.getElementById(`panel-${p1.row}-${p1.col}`);
+    const el2 = document.getElementById(`panel-${p2.row}-${p2.col}`);
+
+    if (!el1 || !el2) return;
+
+    const tempTop = el1.style.top;
+    const tempLeft = el1.style.left;
+
+    el1.style.top = el2.style.top;
+    el1.style.left = el2.style.left;
+    el2.style.top = tempTop;
+    el2.style.left = tempLeft;
+
+    await sleep(300); // スワップアニメーション待機
+
+    // DOMの属性を更新
+    const tempId = el1.id;
+    el1.id = el2.id;
+    el2.id = tempId;
+
+    const tempRow = el1.dataset.row;
+    el1.dataset.row = el2.dataset.row;
+    el2.dataset.row = tempRow;
+
+    const tempCol = el1.dataset.col;
+    el1.dataset.col = el2.dataset.col;
+    el2.dataset.col = tempCol;
+}
+
 async function handleChainReaction(initialMatches) {
     let currentMatches = initialMatches;
     let chainCount = 1;
