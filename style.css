@@ -1,0 +1,179 @@
+/* 基本スタイル */
+body {
+    font-family: 'Helvetica Neue', 'Arial', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #fdf6e3; /* クリーム色 */
+    color: #586e75; /* ダークグレー */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+#game-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: auto;
+}
+
+/* 画面の表示・非表示 */
+.screen {
+    display: none;
+}
+.screen.active {
+    display: block;
+}
+
+/* タイトル画面 */
+#title-screen {
+    text-align: center;
+}
+#title-screen h1 {
+    font-size: 2.5em;
+    color: #d33682; /* マゼンタ */
+}
+#start-button, #restart-button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    background-color: #268bd2; /* ブルー */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px #1a6091;
+    transition: all 0.1s ease-in-out;
+}
+#start-button:active, #restart-button:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 #1a6091;
+}
+
+
+/* ゲーム画面のレイアウト */
+#game-screen {
+    display: flex;
+    flex-wrap: wrap; /* スマホ表示のために折り返しを許可 */
+    gap: 20px;
+}
+
+#left-panel {
+    flex: 1;
+    min-width: 280px;
+}
+#puzzle-container {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+}
+
+/* ヘッダー */
+#game-header {
+    background-color: #eee8d5;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-around;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+/* 猫の待機列 */
+#cat-queue-container h2 {
+    text-align: center;
+    color: #cb4b16; /* オレンジ */
+}
+#cat-queue {
+    background-color: #eee8d5;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 300px;
+}
+.cat-request {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #fdf6e3;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    border: 2px solid #eee8d5;
+}
+.cat-face {
+    font-size: 2.5em;
+    margin-right: 15px;
+}
+.cat-request-details .request-item {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+.cat-request-details .request-text {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+
+/* パズル盤面 */
+#puzzle-board {
+    display: grid;
+    grid-template-columns: repeat(8, 50px);
+    grid-template-rows: repeat(8, 50px);
+    gap: 4px;
+    padding: 10px;
+    background-color: #073642; /* ベースのダークブルー */
+    border: 5px solid #586e75;
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.panel {
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.panel.selected {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px 3px #ffff00; /* 黄色いハイライト */
+}
+
+/* リザルト画面 */
+#result-screen {
+    text-align: center;
+}
+#result-screen h2 {
+    font-size: 2.2em;
+    color: #dc322f; /* レッド */
+}
+#result-screen p {
+    font-size: 1.5em;
+}
+
+
+/* レスポンシブ対応 (スマホ用) */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    #game-screen {
+        flex-direction: column; /* 縦並びにする */
+    }
+    #puzzle-board {
+        grid-template-columns: repeat(8, 10vw);
+        grid-template-rows: repeat(8, 10vw);
+        max-width: 380px; /* 画面に収まるように */
+    }
+    .panel {
+        width: 10vw;
+        height: 10vw;
+        max-width: 45px;
+        max-height: 45px;
+    }
+    #left-panel {
+        order: -1; /* パズルより上に表示 */
+    }
+}
